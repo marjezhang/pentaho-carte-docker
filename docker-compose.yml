@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  pentaho-carte:
+    image: quarrierzhang/pentaho-carte:9.0
+    environment:
+      SERVER_PORT: 8081
+      SERVER_HOST: '192.168.137.54'
+      SERVER_NAME: 'ifca-Master'
+      SERVER_USER: 'admin'
+      SERVER_PASSWD: '123456'
+      RUNMODE: 'master'
+    volumes:
+      - "pentaho-carte:/data-integration"
+    ports:
+      - "8081:8081"
+    restart: always
+    container_name: pentaho-carte
+    privileged: true
+    hostname: '192.168.137.54'
+    networks:
+      carte-networks:
+        aliases:
+          - pentaho-carte
+    extra_hosts:
+      - "127.0.0.1:192.168.137.54"
+      - "localhost:192.168.137.54"
+  
+volumes:
+  pentaho-carte:
+    name: pentaho-carte
+    
+networks:
+  carte-networks:
+    name: carte-networks
+    
