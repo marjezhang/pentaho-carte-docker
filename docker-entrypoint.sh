@@ -19,8 +19,8 @@ set -e
 : ${SERVER_NAME:="pdi-server"}
 : ${SERVER_HOST:="`hostname`"}
 : ${SERVER_PORT:="7373"}
-: ${SERVER_USER:="admin"}
-: ${SERVER_PASSWD:=""}
+: ${SERVER_USER:="cluster"}
+: ${SERVER_PASSWD:="clusterpass"}
 
 : ${MASTER_NAME:="pdi-master"}
 : ${MASTER_HOST:="localhost"}
@@ -28,6 +28,8 @@ set -e
 : ${MASTER_CONTEXT:="pentaho"}
 : ${MASTER_USER:="admin"}
 : ${MASTER_PASSWD:="password"}
+: ${SSLMODLE:=0}
+: ${RUNMODE:="default"}
 
 _gen_password() {
 	echo "Generating encrypted password..."
@@ -72,8 +74,6 @@ gen_rest_conf() {
 # Note: lines like these with a # in front of it are comments
 #
 # Read more at https://github.com/pentaho/pentaho-kettle/blob/6.1.0.1-R/engine/src/kettle-variables.xml
-
-
 KETTLE_EMPTY_STRING_DIFFERS_FROM_NULL=Y
 KETTLE_DISABLE_CONSOLE_LOGGING=N
 KETTLE_FORCED_SSL=N
@@ -84,53 +84,14 @@ KETTLE_REDIRECT_STDERR=Y
 KETTLE_REDIRECT_STDOUT=Y
 KETTLE_SYSTEM_HOSTNAME=${SERVER_HOST}
 # Less memory consumption, hopefully
-KETTLE_STEP_PERFORMANCE_SNAPSHOT_LIMIT=1
+# KETTLE_STEP_PERFORMANCE_SNAPSHOT_LIMIT=1
+KETTLE_STEP_PERFORMANCE_SNAPSHOT_LIMIT=0
 # Tracing
 #KETTLE_TRACING_ENABLED=Y
 #KETTLE_TRACING_HTTP_URL=http://localhost:9411
 EOF
 	fi
-	if [ ! -f classes/log4j.xml ]; then
-		mkdir classes
-		echo "Generating log4j.xml..."
-		cat << EOF > classes/log4j.xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
-<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/" debug="false">
-	<!-- ================================= -->
-	<!-- Preserve messages in a local file -->
-	<!-- ================================= -->
-	<appender name="PENTAHOFILE" class="org.apache.log4j.RollingFileAppender">
-		<param name="File" value="logs/pdi.log"/>
-		<param name="Append" value="true"/>
-		<param name="MaxFileSize" value="10MB"/>
-		<param name="MaxBackupIndex" value="5"/>
-		<layout class="org.apache.log4j.PatternLayout">
-			<param name="ConversionPattern" value="%d %-5p [%c] %m%n"/>
-		</layout>
-	</appender>
-	<!-- ================ -->
-	<!-- Limit categories -->
-	<!-- ================ -->
-	<category name="org.pentaho.di">
-		<priority value="INFO" />
-	</category>
-	<category name="org.pentaho.platform.osgi">
-		<priority value="INFO" />
-	</category>
-	<category name="org.pentaho.platform.engine.core.system.status">
-		<priority value="INFO"/>
-	</category>
-	<!-- ======================= -->
-	<!-- Setup the Root category -->
-	<!-- ======================= -->
-	<root>
-		<priority value="ERROR" />
-		<appender-ref ref="PENTAHOFILE"/>
-	</root>
-</log4j:configuration>
-EOF
-	fi
+	
 }
 
 gen_slave_config() {
@@ -141,6 +102,11 @@ gen_slave_config() {
 
 		if [[ ! $MASTER_PASSWD == Encrypted* ]]; then
 			MASTER_PASSWD=$(./encr.sh -kettle $MASTER_PASSWD | tail -1)
+		fi
+		
+		_sslMode="N"
+		if [[ $SSLMODLE -eq 1 ]]; then
+			_sslMode="Y"
 		fi
 
 		# this is tricky as encr.sh will generate kettle.properties without required configuration
@@ -157,7 +123,7 @@ gen_slave_config() {
             <username>${MASTER_USER}</username>
             <password>${MASTER_PASSWD}</password>
             <master>Y</master>
-            <sslMode>Y</sslMode>
+            <sslMode>${_sslMode}</sslMode>
         </slaveserver>
     </masters>
     <report_to_masters>Y</report_to_masters>
@@ -187,6 +153,11 @@ gen_master_config() {
 		_gen_password
 
 		rm -f .kettle/kettle.properties
+		
+		_sslMode="N"
+		if [[ $SSLMODLE -eq 1 ]]; then
+			_sslMode="Y"
+		fi
 
 		cat << EOF > pwd/master.xml
 <slave_config>
@@ -197,7 +168,7 @@ gen_master_config() {
             <username>${SERVER_USER}</username>
             <password>${SERVER_PASSWD}</password>
             <master>Y</master>
-            <sslMode>N</sslMode>
+            <sslMode>${_sslMode}</sslMode>
         </slaveserver>
 		<report_to_masters>Y</report_to_masters>
         <max_log_lines>${PDI_MAX_LOG_LINES}</max_log_lines>
@@ -209,7 +180,7 @@ EOF
 }
 
 # run as slave server
-if [ "$1" = 'slave' ]; then
+if [ "${RUNMODE}" = 'slave' ]; then
 	gen_slave_config
 	gen_rest_conf
 	
@@ -221,7 +192,7 @@ if [ "$1" = 'slave' ]; then
 	# now start the PDI server
 	echo "Starting Carte as slave server..."
 	exec $KETTLE_HOME/carte.sh $KETTLE_HOME/pwd/slave.xml
-elif [ "$1" = 'master' ]; then
+elif [ "${RUNMODE}" = 'master' ]; then
 	gen_master_config
 	gen_rest_conf
 	

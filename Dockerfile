@@ -3,8 +3,8 @@ MAINTAINER quarrier <quarriermarje@gmail.com>
 
 COPY ./data-integration /data-integration
 
-ENV EXPOSE_PORT 8081
-ENV EXPOSE_IP 192.168.137.54
+ENV SERVER_PORT 8081
+ENV SERVER_HOST 192.168.137.54
 ENV JAVA_BIN=$JAVA_HOME/bin \
     JRE_HOME=$JAVA_HOME/jre \
 	CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar \
@@ -18,7 +18,7 @@ ADD docker-entrypoint.sh $KETTLE_HOME/docker-entrypoint.sh
 RUN chmod 777 /data-integration \
     && chmod 777 /data-integration/**
 
-EXPOSE $EXPOSE_PORT
+EXPOSE $SERVER_PORT
 WORKDIR $KETTLE_HOME
 
-CMD ["/bin/bash","./docker-entrypoint.sh","master"]
+CMD ["/bin/bash","./docker-entrypoint.sh"]

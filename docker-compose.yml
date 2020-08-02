@@ -13,24 +13,28 @@ services:
     volumes:
       - "pentaho-carte:/data-integration"
     ports:
-      - "8081:8081"
+      - "18081:8081"
+      - "8802:8802"
+      - "9051:9051"
     restart: always
     container_name: pentaho-carte
     privileged: true
     hostname: '192.168.137.54'
-    networks:
-      carte-networks:
-        aliases:
-          - pentaho-carte
-    extra_hosts:
-      - "127.0.0.1:192.168.137.54"
-      - "localhost:192.168.137.54"
+    ipc: host
+    network_mode: "host"
+    # networks:
+        # carte-net: {}
+    # networks:
+      # hostnet: {}
   
 volumes:
   pentaho-carte:
     name: pentaho-carte
-    
-networks:
-  carte-networks:
-    name: carte-networks
-    
+# networks:
+  # carte-net:
+    # name: carte-net
+    # drive: host
+# networks:
+  # hostnet:
+    # external:
+      # name: host
