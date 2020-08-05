@@ -30,10 +30,12 @@ set -e
 : ${MASTER_PASSWD:="password"}
 : ${SSLMODLE:=0}
 : ${RUNMODE:="default"}
+: ${ENCRYPTED:="false"}
 
 _gen_password() {
 	echo "Generating encrypted password..."
 	[[ "$DEBUG" ]] && echo "SERVER_PASSWD=>...  $SERVER_PASSWD"
+	
 	if [[ "$SERVER_PASSWD" == "" ]]; then
 		_ADMIN_PWD="$(dd if=/dev/urandom bs=255 count=1 | tr -dc 'a-zA-Z0-9' | fold -w $((96 + RANDOM % 32)) | head -n 1)"
 	else
@@ -44,7 +46,11 @@ _gen_password() {
 	if [[ $_ADMIN_PWD == Encrypted* ]]; then
 		SERVER_PASSWD="$_ADMIN_PWD"
 	else
-		SERVER_PASSWD=$(./encr.sh -kettle $_ADMIN_PWD | tail -1)
+		if [[ "$ENCRYPTED" != "true" ]]; then
+			SERVER_PASSWD="$_ADMIN_PWD"
+		else
+			SERVER_PASSWD=$(./encr.sh -kettle $_ADMIN_PWD | tail -1)
+		fi
 	fi
 	[[ "$DEBUG" ]] && echo "Encrypted SERVER_PASSWD=>...  $SERVER_PASSWD"
 	_ADMIN_PWD=""
@@ -99,9 +105,11 @@ gen_slave_config() {
 	if [ ! -f pwd/slave.xml ]; then
 		echo "Generating slave server configuration..."
 		_gen_password
-
-		if [[ ! $MASTER_PASSWD == Encrypted* ]]; then
-			MASTER_PASSWD=$(./encr.sh -kettle $MASTER_PASSWD | tail -1)
+		
+		if [[ "$ENCRYPTED" == "true" ]]; then
+			if [[ ! $MASTER_PASSWD == Encrypted* ]]; then
+				MASTER_PASSWD=$(./encr.sh -kettle $MASTER_PASSWD | tail -1)
+			fi
 		fi
 		
 		_sslMode="N"
