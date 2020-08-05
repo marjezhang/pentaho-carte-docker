@@ -17,14 +17,14 @@ set -e
 : ${CERT_NAME:="Pentaho"}
 
 : ${SERVER_NAME:="pdi-server"}
-: ${SERVER_HOST:="`hostname`"}
-: ${SERVER_PORT:="7373"}
+: ${SERVER_HOST:="0.0.0.0"}
+: ${SERVER_PORT:="8081"}
 : ${SERVER_USER:="cluster"}
-: ${SERVER_PASSWD:="clusterpass"}
+: ${SERVER_PASSWD:="cluster"}
 
 : ${MASTER_NAME:="pdi-master"}
-: ${MASTER_HOST:="localhost"}
-: ${MASTER_PORT:="7373"}
+: ${MASTER_HOST:="0.0.0.0"}
+: ${MASTER_PORT:="8081"}
 : ${MASTER_CONTEXT:="pentaho"}
 : ${MASTER_USER:="admin"}
 : ${MASTER_PASSWD:="password"}
@@ -33,20 +33,20 @@ set -e
 
 _gen_password() {
 	echo "Generating encrypted password..."
+	[[ "$DEBUG" ]] && echo "SERVER_PASSWD=>...  $SERVER_PASSWD"
 	if [[ "$SERVER_PASSWD" == "" ]]; then
 		_ADMIN_PWD="$(dd if=/dev/urandom bs=255 count=1 | tr -dc 'a-zA-Z0-9' | fold -w $((96 + RANDOM % 32)) | head -n 1)"
 	else
 		_ADMIN_PWD="$SERVER_PASSWD"
 	fi
-
-	[[ "$DEBUG" ]] && echo "=> [$_ADMIN_PWD]"
+	[[ "$DEBUG" ]] && echo "_ADMIN_PWD=>...  $_ADMIN_PWD"
 
 	if [[ $_ADMIN_PWD == Encrypted* ]]; then
 		SERVER_PASSWD="$_ADMIN_PWD"
 	else
 		SERVER_PASSWD=$(./encr.sh -kettle $_ADMIN_PWD | tail -1)
 	fi
-
+	[[ "$DEBUG" ]] && echo "Encrypted SERVER_PASSWD=>...  $SERVER_PASSWD"
 	_ADMIN_PWD=""
 }
 
@@ -112,6 +112,8 @@ gen_slave_config() {
 		# this is tricky as encr.sh will generate kettle.properties without required configuration
 		rm -f .kettle/kettle.properties
 		
+		
+		
 		cat << EOF > pwd/slave.xml
 <slave_config>
     <masters>
@@ -158,7 +160,9 @@ gen_master_config() {
 		if [[ $SSLMODLE -eq 1 ]]; then
 			_sslMode="Y"
 		fi
-
+		
+		[[ "$DEBUG" ]] && echo "Encrypted SERVER_PASSWD gen_master_config=>...  $SERVER_PASSWD"
+		
 		cat << EOF > pwd/master.xml
 <slave_config>
         <slaveserver>
