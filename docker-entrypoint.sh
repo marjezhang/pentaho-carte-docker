@@ -102,7 +102,7 @@ EOF
 		test -d ~/.kettle || mkdir ~/.kettle
 		echo "Generating kettle/repositories.xml..."
 
-		cat << EOF > .kettle/repositories.xml		
+		cat << EOF > ~/.kettle/repositories.xml		
 			<?xml version="1.0" encoding="UTF-8"?>
 			<repositories>
 				<repository>
