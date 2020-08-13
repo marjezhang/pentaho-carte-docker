@@ -1,7 +1,6 @@
 FROM ubuntu:18.04
 MAINTAINER quarrier <quarriermarje@gmail.com>
-
-COPY ./data-integration /data-integration
+COPY ./pdi-ce-9.0.0.0-423.zip /data-integration/
 ADD ./jdk /usr/local/openjdk-8
 ENV JAVA_HOME /usr/local/openjdk-8
 ENV SERVER_PORT 8081
@@ -14,12 +13,6 @@ ENV JAVA_BIN=$JAVA_HOME/bin \
 	PENTAHO_HOME=/data-integration \
 	KETTLE_HOME=/data-integration
 ENV PATH=$JAVA_HOME/bin:$JRE_HOME/bin:$PATH
-
-ADD docker-entrypoint.sh $KETTLE_HOME/docker-entrypoint.sh
-RUN chmod 777 /data-integration \
-    && chmod 777 /data-integration/** \
-	&& chmod 777 /usr/local/openjdk-8/** \
-	&& chmod 777 /usr/local/openjdk-8
 	
 RUN mv /etc/apt/sources.list /etc/apt/sources.list.bak && \
 echo 'deb http://mirrors.huaweicloud.com/ubuntu/ bionic main restricted universe multiverse'> /etc/apt/sources.list && \
@@ -43,9 +36,20 @@ echo 'deb-src http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted u
 echo 'deb-src http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse'>> /etc/apt/sources.list && \
 echo 'deb-src http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse'>> /etc/apt/sources.list
 
-RUN apt-get update && apt-get -y install libwebkitgtk-1.0-0 vim ca-certificates openssl
+RUN apt-get update && apt-get -y install libwebkitgtk-1.0-0 vim ca-certificates openssl zip
+
+WORKDIR $KETTLE_HOME
+ADD docker-entrypoint.sh $KETTLE_HOME/docker-entrypoint.sh
+
+RUN unzip ./pdi-ce-9.0.0.0-423.zip -d $KETTLE_HOME/ \
+	&& mv ./data-integration/** ./ \
+	&& rm -rf ./data-integration \
+	&& rm -rf ./pdi-ce-9.0.0.0-423.zip \
+	&& chmod -R 777 /data-integration \    
+	&& chmod -R 777 /usr/local/openjdk-8
+
+COPY ./mysql-connector-java-5.1.48-bin.jar $KETTLE_HOME/lib/
 
 EXPOSE $SERVER_PORT
-WORKDIR $KETTLE_HOME
 
 CMD ["/bin/bash","./docker-entrypoint.sh"]

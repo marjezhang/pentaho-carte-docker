@@ -2,10 +2,8 @@ version: "3.8"
 
 services:
   pentaho-carte:
-    image: quarrierzhang/pentaho-carte:9.0.0.2
+    image: quarrierzhang/pentaho-carte:9.0.0.0
     environment:
-      SERVER_PORT: 8081
-      SERVER_HOST: '0.0.0.0'
       SERVER_NAME: 'ifca-Master'
       SERVER_USER: 'admin'
       SERVER_PASSWD: '123456'
@@ -30,10 +28,40 @@ services:
         # carte-net: {}
     # networks:
       # hostnet: {}
-  
+  carte-slave1:
+    image: quarrierzhang/pentaho-carte:9.0.0.0
+    environment:
+      SERVER_NAME: 'ifca-slave1'
+      SERVER_USER: 'cluster'
+      SERVER_PASSWD: '123456'
+      RUNMODE: 'slave'
+      DEBUG: 'true'
+      MASTER_NAME: 'ifca-Master'
+      MASTER_HOST: '192.168.137.54'
+      MASTER_PORT: '8081'
+      MASTER_CONTEXT: 'pentaho'
+      MASTER_USER: 'admin'
+      MASTER_PASSWD: '123456'
+    volumes:
+      - "carte-slave1:/data-integration"
+    ports:
+      - "28081:8081"
+    restart: always
+    container_name: carte-slave1
+    privileged: true
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5g"
+        max-file: "3"  
+    depends_on:
+      - pentaho-carte     
+        
 volumes:
   pentaho-carte:
     name: pentaho-carte
+  carte-slave1:
+    name: carte-slave1
 # networks:
   # carte-net:
     # name: carte-net
