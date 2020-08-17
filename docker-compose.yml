@@ -11,7 +11,7 @@ services:
       DEBUG: 'true'
     volumes:
       - "pentaho-carte:/data-integration"
-      - "pentaho-carte-home:~/.kettle"
+      - "pentaho-carte-home:/root/.kettle"
     ports:
       - "8081:8081"
     restart: always
@@ -43,11 +43,12 @@ services:
       MASTER_CONTEXT: 'pentaho'
       MASTER_USER: 'admin'
       MASTER_PASSWD: '123456'
+      SERVER_PORT: '28081'
     volumes:
       - "carte-slave1:/data-integration"
-      - "carte-slave1-home:~/.kettle"
+      - "carte-slave1-home:/root/.kettle"
     ports:
-      - "28081:8081"
+      - "28081:28081"
     restart: always
     container_name: carte-slave1
     privileged: true

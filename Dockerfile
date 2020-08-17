@@ -36,7 +36,10 @@ echo 'deb-src http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted u
 echo 'deb-src http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse'>> /etc/apt/sources.list && \
 echo 'deb-src http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse'>> /etc/apt/sources.list
 
-RUN apt-get update && apt-get -y install libwebkitgtk-1.0-0 vim ca-certificates openssl zip
+RUN apt-get update && apt-get -y install libwebkitgtk-1.0-0 vim ca-certificates openssl zip locales language-pack-zh-hans \
+	&& rm -rf /var/lib/apt/lists/* \
+    && localedef -i zh_CN -c -f UTF-8 -A /usr/share/locale/locale.alias zh_CN.UTF-8
+ENV LANG zh_CN.UTF-8
 
 WORKDIR $KETTLE_HOME
 ADD docker-entrypoint.sh $KETTLE_HOME/docker-entrypoint.sh

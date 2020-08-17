@@ -136,9 +136,7 @@ gen_slave_config() {
 			_sslMode="Y"
 		fi
 
-		# this is tricky as encr.sh will generate kettle.properties without required configuration
-		rm -f .kettle/kettle.properties
-		
+				
 		
 		
 		cat << EOF > pwd/slave.xml
@@ -147,8 +145,7 @@ gen_slave_config() {
         <slaveserver>
             <name>${MASTER_NAME}</name>
             <hostname>${MASTER_HOST}</hostname>
-            <port>${MASTER_PORT}</port>
-            <webAppName>${MASTER_CONTEXT}</webAppName>
+            <port>${MASTER_PORT}</port>            
             <username>${MASTER_USER}</username>
             <password>${MASTER_PASSWD}</password>
             <master>Y</master>
@@ -181,8 +178,6 @@ gen_master_config() {
 		echo "Generating master server configuration..."
 		_gen_password
 
-		rm -f .kettle/kettle.properties
-		
 		_sslMode="N"
 		if [[ $SSLMODLE -eq 1 ]]; then
 			_sslMode="Y"
