@@ -1,0 +1,29 @@
+<slave_config>
+    <masters>
+        <slaveserver>
+            <name>ifca-Master</name>
+            <hostname>ifca-Master</hostname>
+            <port>8081</port>
+            <username>admin</username>
+            <password>123456</password>
+            <master>Y</master>
+            <sslMode>N</sslMode>
+        </slaveserver>
+    </masters>
+    <report_to_masters>Y</report_to_masters>
+    <slaveserver>
+        <name>ifca-slave1</name>
+        <hostname>ifca-slave1</hostname>
+        <port>28081</port>
+        <!--<network_interface>eth0</network_interface>-->
+        <username>admin</username>
+        <password>123456</password>
+        <master>N</master>
+        <sslMode>N</sslMode>
+        <get_properties_from_master>ifca-Master</get_properties_from_master>
+        <override_existing_properties>Y</override_existing_properties>
+    </slaveserver>
+    <max_log_lines>10000</max_log_lines>
+    <max_log_timeout_minutes>1440</max_log_timeout_minutes>
+    <object_timeout_minutes>240</object_timeout_minutes>
+</slave_config>
