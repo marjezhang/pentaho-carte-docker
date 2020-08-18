@@ -22,6 +22,11 @@ services:
       options:
         max-size: "5g"
         max-file: "3"  
+    networks:
+      carte-net:
+        aliases:
+          - ifca-Master
+        ipv4_address: 172.16.238.10        
     # hostname: 'localhost'
     # ipc: host
     # network_mode: "host"
@@ -33,7 +38,7 @@ services:
     image: quarrierzhang/pentaho-carte:9.0.0.0
     environment:
       SERVER_NAME: 'ifca-slave1'
-      SERVER_USER: 'cluster'
+      SERVER_USER: 'admin'
       SERVER_PASSWD: '123456'
       RUNMODE: 'slave'
       DEBUG: 'true'
@@ -59,6 +64,11 @@ services:
         max-file: "3"  
     depends_on:
       - pentaho-carte     
+    networks:
+      carte-net:
+        aliases:
+          - ifca-slave1
+        ipv4_address: 172.16.238.11    
         
 volumes:
   pentaho-carte:
@@ -69,10 +79,15 @@ volumes:
     name: pentaho-carte-home
   carte-slave1-home:
     name: carte-slave1-home
-# networks:
-  # carte-net:
-    # name: carte-net
-    # drive: host
+networks:
+  carte-net:
+    name: carte-net
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.16.238.0/24"
+          
 # networks:
   # hostnet:
     # external:
